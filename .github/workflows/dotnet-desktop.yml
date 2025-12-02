@@ -15,11 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup .NET 8 SDK
+      # 2️⃣ Setup .NET 10 SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 10.0.x
+           dotnet-version: 10.0.x
 
       # 3️⃣ Restore dependencies
       - name: Restore dependencies
@@ -37,23 +37,21 @@ jobs:
       - name: Publish
         run: dotnet publish -c Release -o ./publish
 
-      # 7️⃣ List published files (optional, for debug)
+      # 7️⃣ List published files (optional, PowerShell syntax)
       - name: List published files
-        run: dir ./publish /s
+        shell: pwsh
+        run: Get-ChildItem -Path "$PWD\publish" -Recurse
 
-      # 8️⃣ Deploy to IIS server via PowerShell (overwrite existing files)
-      - name: Deploy to IIS
+      # 8️⃣ Stop IIS App Pool and remove old files
+      - name: Prepare IIS
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASS }}
           script: |
-            # Stop App Pool to unlock files
             Import-Module WebAdministration
             Stop-WebAppPool -Name 'MyWebAPIAppPool'
-
-            # Remove old files
             Remove-Item -Path 'C:\inetpub\wwwroot\MyWebAPI\*' -Recurse -Force
 
       # 9️⃣ Copy published files to Windows server
@@ -76,12 +74,3 @@ jobs:
           script: |
             Import-Module WebAdministration
             Start-WebAppPool -Name 'MyWebAPIAppPool'
-
-      # Optional: Restart IIS (if you want full reset)
-      #- name: Restart IIS
-      #  uses: appleboy/ssh-action@v0.1.6
-      #  with:
-      #    host: ${{ secrets.SERVER_HOST }}
-      #    username: ${{ secrets.SERVER_USER }}
-      #    password: ${{ secrets.SERVER_PASS }}
-      #    script: iisreset
