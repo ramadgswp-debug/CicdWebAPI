@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build & Publish (.NET 10)
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, x64]  # Must match runner's labels
 
     steps:
       - name: Checkout
