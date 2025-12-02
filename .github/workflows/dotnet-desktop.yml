@@ -1,70 +1,66 @@
-name: .NET 8 WebAPI CI/CD to IIS (Windows 11)
+name: .NET 10 CI/CD to Windows 11 IIS
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  build:
+    name: Build & Publish (.NET 10)
     runs-on: windows-latest
 
     steps:
-      # 1️⃣ Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # 2️⃣ Setup .NET 8 SDK
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '10.0.x'
 
-      # 3️⃣ Restore dependencies
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore
 
-      # 4️⃣ Build the project
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      # 5️⃣ Run unit tests
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test --no-build
 
-      # 6️⃣ Publish the project
       - name: Publish
         run: dotnet publish -c Release -o ./publish
 
-      # 7️⃣ List published files (optional, for debugging)
-      - name: List published files
-        shell: pwsh
-        run: Get-ChildItem -Path "$PWD\publish" -Recurse
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-app
+          path: ./publish
 
-      # 8️⃣ Stop IIS App Pool on the remote server
-      - name: Stop IIS App Pool
-        shell: pwsh
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} `
-            "Import-Module WebAdministration; Stop-WebAppPool -Name 'MyWebAPIAppPool'"
 
-      # 9️⃣ Remove old files on the remote server
-      - name: Clean IIS directory
-        shell: pwsh
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} `
-            "Remove-Item -Path 'C:\inetpub\wwwroot\MyWebAPI\*' -Recurse -Force"
+  deploy:
+    name: Deploy to Windows 11 IIS
+    runs-on: self-hosted          # your Windows 11 runner
+    needs: build
 
-      # 🔟 Copy published files via SCP
-      - name: Copy published files
-        shell: pwsh
-        run: |
-          scp -r ./publish/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:"C:/inetpub/wwwroot/MyWebAPI/"
+    steps:
+      - name: Download published files
+        uses: actions/download-artifact@v4
+        with:
+          name: published-app
+          path: C:\cicd\publish
 
-      # 1️⃣1️⃣ Start IIS App Pool
-      - name: Start IIS App Pool
-        shell: pwsh
+      - name: Stop App Pool
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} `
-            "Import-Module WebAdministration; Start-WebAppPool -Name 'MyWebAPIAppPool'"
+          Import-Module WebAdministration
+          Stop-WebAppPool -Name "MyAppPool" -ErrorAction SilentlyContinue
+
+      - name: Deploy (Copy files to IIS)
+        run: |
+          robocopy C:\cicd\publish C:\inetpub\wwwroot\MySite /MIR /R:1 /W:1
+
+      - name: Start App Pool
+        run: |
+          Import-Module WebAdministration
+          Start-WebAppPool -Name "MyAppPool"
