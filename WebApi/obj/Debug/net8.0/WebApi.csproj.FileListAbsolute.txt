@@ -1,0 +1,9 @@
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.csproj.AssemblyReference.cache
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\rpswa.dswa.cache.json
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.GeneratedMSBuildEditorConfig.editorconfig
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.AssemblyInfoInputs.cache
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.AssemblyInfo.cs
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.csproj.CoreCompileInputs.cache
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.MvcApplicationPartsAssemblyInfo.cs
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.MvcApplicationPartsAssemblyInfo.cache
+D:\CicdWebAPI\WebApi\obj\Debug\net8.0\WebApi.sourcelink.json
